@@ -1,27 +1,26 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es5",
+        "target": "es6",
         "outDir": "out",
         "lib": [
-            "es6",
-            "dom"
+            "es6", "dom"
         ],
         "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
-        "noImplicitThis": false,
-        "noUnusedLocals": true,
-        "noUnusedParameters": false,
-        // "strict": true
+        "noImplicitThis": false
+        // TODO: enable to ensure all code complies with strict coding standards
+        // , "noUnusedLocals": true
+        // , "noUnusedParameters": false
+        // , "strict": true
     },
     "exclude": [
+        "node_modules",
         ".vscode-test",
-        "src/test",
-        "src/server",
-        "src/client",
+        "src/datascience-ui",
         "build"
     ]
 }

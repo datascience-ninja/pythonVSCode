@@ -8,6 +8,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../common/application/types';
+import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { ICurrentProcess, ILogger } from '../common/types';
 import { ICodeCssGenerator } from './types';
 
@@ -20,12 +21,12 @@ import { ICodeCssGenerator } from './types';
 @injectable()
 export class CodeCssGenerator implements ICodeCssGenerator {
     constructor(
-        @inject(IWorkspaceService) private workspaceService : IWorkspaceService,
-        @inject(ICurrentProcess) private currentProcess : ICurrentProcess,
-        @inject(ILogger) private logger : ILogger) {
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
+        @inject(ILogger) private logger: ILogger) {
     }
 
-    public generateThemeCss = async () : Promise<string> => {
+    public generateThemeCss = async (): Promise<string> => {
         try {
             // First compute our current theme.
             const workbench = this.workspaceService.getConfiguration('workbench');
@@ -51,7 +52,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         return '';
     }
 
-    private getScopeColor = (tokenColors: JSONArray, scope: string) : string => {
+    private getScopeColor = (tokenColors: JSONArray, scope: string): string => {
         // Search through the scopes on the json object
         const match = tokenColors.findIndex(entry => {
             if (entry) {
@@ -81,7 +82,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private generateCss = (tokenColors : JSONArray, fontFamily : string, fontSize: number) : string => {
+    private generateCss = (tokenColors: JSONArray, fontFamily: string, fontSize: number): string => {
 
         // There's a set of values that need to be found
         const comment = this.getScopeColor(tokenColors, 'comment');
@@ -230,11 +231,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     }
 
-    private mergeColors = (colors1 : JSONArray, colors2 : JSONArray) : JSONArray => {
+    private mergeColors = (colors1: JSONArray, colors2: JSONArray): JSONArray => {
         return [...colors1, ...colors2];
     }
 
-    private readTokenColors = async (themeFile: string) : Promise<JSONArray> => {
+    private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         const tokenContent = await fs.readFile(themeFile, 'utf8');
         const theme = JSON.parse(tokenContent) as JSONObject;
         const tokenColors = theme['tokenColors'] as JSONArray;
@@ -254,7 +255,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         return [];
     }
 
-    private findTokenColors = async (theme : string) : Promise<JSONArray> => {
+    private findTokenColors = async (theme: string): Promise<JSONArray> => {
         const currentExe = this.currentProcess.execPath;
         let currentPath = path.dirname(currentExe);
 
@@ -268,11 +269,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Search through all of the json files for the theme name
         const escapedThemeName = theme.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const searchOptions : fm.FindOptions = {
+        const searchOptions: fm.FindOptions = {
             path: extensionsPath,
             recursiveSearch: true,
-            fileFilter : {
-                fileNamePattern : '**/*.json',
+            fileFilter: {
+                fileNamePattern: '**/*.json',
                 content: new RegExp(`id[',"]:\\s*[',"]${escapedThemeName}[',"]`)
             }
         };
@@ -313,7 +314,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         }
 
         // We should return a default. The vscode-light theme
-        const defaultThemeFile = path.join(__dirname, 'defaultTheme.json');
+        const defaultThemeFile = path.join(EXTENSION_ROOT_DIR, 'src', 'client', 'datascience', 'defaultTheme.json');
         return this.readTokenColors(defaultThemeFile);
     }
 }

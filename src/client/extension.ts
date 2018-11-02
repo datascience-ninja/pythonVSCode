@@ -249,6 +249,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
             .length > 0;
 
         const props = { condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3 };
+        console.log(durations);
         sendTelemetryEvent(EDITOR_LOAD, durations, props);
     } catch (ex) {
         logger.logError('sendStartupTelemetry failed.', ex);

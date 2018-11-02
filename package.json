@@ -1856,6 +1856,8 @@
         "webpack": "^4.20.2",
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",
+        "webpack-merge": "^4.1.4",
+        "webpack-node-externals": "^1.7.2",
         "yargs": "^12.0.2"
     },
     "__metadata": {

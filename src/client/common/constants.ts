@@ -90,3 +90,6 @@ export function isLanguageServerTest(): boolean {
 }
 
 export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..', '..');
+console.log('inside constants __dirname');
+console.log(__dirname);
+console.log(EXTENSION_ROOT_DIR);

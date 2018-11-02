@@ -34,7 +34,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 const webpack = require('webpack');
-const webpack_config = require('./webpack.config');
+const webpack_config = require('./webpack.datascience-ui.config');
 const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 const chalk = require('chalk');
 const printBuildError = require('react-dev-utils/printBuildError');
@@ -183,29 +183,14 @@ gulp.task('compile-webviews-watch', () => {
     // Watch all files that are written by the compile task, except for the bundle generated
     // by compile-webviews. Watch the css files too, but in the src directory because webpack
     // will modify the output ones.
-    gulp.watch(['./out/**/*react*/*.js', './src/**/*react*/*.{png,svg,css}', './out/**/react*/*.js', '!./out/**/*react*/*_bundle.js'], gulp.series('compile-webviews'));
+    gulp.watch(['./src/datascience-ui/**/*.ts', './src/**/*react*/*.{png,svg,css}'], gulp.series('compile-webviews'));
 });
 
 const webify = (file) => {
     console.log('Webpacking ' + file.path);
 
-    // Replace the entry with our actual file
-    let config = Object.assign({}, webpack_config);
-    // config.entry = [...config.entry, file.path];
-
-    // // // Update the output path to be next to our bundle.js
-    // const split = path.parse(file.path);
-    // console.log(split);
-    // config.output.path = split.dir;
-
-    // // Update our template to be based on our source
-    // const srcpath = path.join(__dirname, 'src', file.relative);
-    // const html = path.join(path.parse(srcpath).dir, 'index.html');
-    // config.plugins[0].options.template = html;
-    // console.log(file.path);
-    // console.log(config.plugins[0].options.template);
     // Then spawn our webpack on the base name
-    let compiler = webpack(config);
+    let compiler = webpack(webpack_config);
     return new Promise((resolve, reject) => {
 
         // Create a callback for errors and such

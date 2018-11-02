@@ -230,6 +230,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private gotoCellCode = (index: number) => {
+        debugger;
         // Find our cell
         const cellVM = this.state.cellVMs[index];
 

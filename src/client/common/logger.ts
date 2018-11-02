@@ -22,27 +22,27 @@ export class Logger implements ILogger {
     }
     @skipIfTest(false)
     public logError(message: string, ex?: Error) {
-        if (ex) {
-            console.error(`${PREFIX}${message}`, ex);
-        } else {
-            console.error(`${PREFIX}${message}`);
-        }
+        // if (ex) {
+        //     console.error(`${PREFIX}${message}`, ex);
+        // } else {
+        //     console.error(`${PREFIX}${message}`);
+        // }
     }
     @skipIfTest(false)
     public logWarning(message: string, ex?: Error) {
-        if (ex) {
-            console.warn(`${PREFIX}${message}`, ex);
-        } else {
-            console.warn(`${PREFIX}${message}`);
-        }
+        // if (ex) {
+        //     console.warn(`${PREFIX}${message}`, ex);
+        // } else {
+        //     console.warn(`${PREFIX}${message}`);
+        // }
     }
     @skipIfTest(false)
     public logInformation(message: string, ex?: Error) {
-        if (ex) {
-            console.info(`${PREFIX}${message}`, ex);
-        } else {
-            console.info(`${PREFIX}${message}`);
-        }
+        // if (ex) {
+        //     console.info(`${PREFIX}${message}`, ex);
+        // } else {
+        //     console.info(`${PREFIX}${message}`);
+        // }
     }
 }
 

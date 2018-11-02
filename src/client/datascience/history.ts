@@ -271,6 +271,12 @@ export class History implements IWebPanelMessageListener, IHistory {
 
         // Figure out the name of our main bundle. Should be in our output directory
         const mainScriptPath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
+        console.log('mainScriptPath');
+        console.log(mainScriptPath);
+        console.log(mainScriptPath);
+        console.log(mainScriptPath);
+        console.log(mainScriptPath);
+        console.log(mainScriptPath);
 
         // Generate a css to put into the webpanel for viewing code
         const css = await this.cssGenerator.generateThemeCss();

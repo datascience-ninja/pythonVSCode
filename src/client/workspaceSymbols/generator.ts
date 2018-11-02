@@ -6,6 +6,7 @@ import { IProcessServiceFactory } from '../common/process/types';
 import { IPythonSettings } from '../common/types';
 import { captureTelemetry } from '../telemetry';
 import { WORKSPACE_SYMBOLS_BUILD } from '../telemetry/constants';
+import { EXTENSION_ROOT_DIR } from '../common/constants';
 
 export class Generator implements Disposable {
     private optionsFile: string;
@@ -20,7 +21,7 @@ export class Generator implements Disposable {
     constructor(public readonly workspaceFolder: Uri, private readonly output: OutputChannel,
         private readonly processServiceFactory: IProcessServiceFactory) {
         this.disposables = [];
-        this.optionsFile = path.join(__dirname, '..', '..', '..', 'resources', 'ctagOptions');
+        this.optionsFile = path.join(EXTENSION_ROOT_DIR, 'resources', 'ctagOptions');
         this.pythonSettings = PythonSettings.getInstance(workspaceFolder);
     }
 
