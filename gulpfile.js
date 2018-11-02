@@ -34,7 +34,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 const webpack = require('webpack');
-const webpack_config = require('./webpack.default.config');
+const webpack_config = require('./webpack.config');
 const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 const chalk = require('chalk');
 const printBuildError = require('react-dev-utils/printBuildError');
@@ -164,13 +164,13 @@ gulp.task('compile-webviews', (done) => {
     // Clear screen before starting
     console.log('\x1Bc');
 
-    // First copy the files/css/svg/png files to the output folder
-    gulp.src('./src/**/*.{png,svg,css}')
-        .pipe(gulp.dest('./out'));
+    // // First copy the files/css/svg/png files to the output folder
+    // gulp.src('./src/**/*.{png,svg,css}')
+    //     .pipe(gulp.dest('./out'));
 
-    // Then our theme json
-    gulp.src('./src/**/*theme*.json')
-        .pipe(gulp.dest('./out'));
+    // // Then our theme json
+    // gulp.src('./src/**/*theme*.json')
+    //     .pipe(gulp.dest('./out'));
 
     // Then run webpack on the output files
     gulp.src('./out/**/*react/index.js')
@@ -191,17 +191,19 @@ const webify = (file) => {
 
     // Replace the entry with our actual file
     let config = Object.assign({}, webpack_config);
-    config.entry = [...config.entry, file.path];
+    // config.entry = [...config.entry, file.path];
 
-    // Update the output path to be next to our bundle.js
-    const split = path.parse(file.path);
-    config.output.path = split.dir;
+    // // // Update the output path to be next to our bundle.js
+    // const split = path.parse(file.path);
+    // console.log(split);
+    // config.output.path = split.dir;
 
-    // Update our template to be based on our source
-    const srcpath = path.join(__dirname, 'src', file.relative);
-    const html = path.join(path.parse(srcpath).dir, 'index.html');
-    config.plugins[0].options.template = html;
-
+    // // Update our template to be based on our source
+    // const srcpath = path.join(__dirname, 'src', file.relative);
+    // const html = path.join(path.parse(srcpath).dir, 'index.html');
+    // config.plugins[0].options.template = html;
+    // console.log(file.path);
+    // console.log(config.plugins[0].options.template);
     // Then spawn our webpack on the base name
     let compiler = webpack(config);
     return new Promise((resolve, reject) => {
