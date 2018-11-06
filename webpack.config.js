@@ -1,6 +1,10 @@
 const merge = require('webpack-merge');
-const common = require('./webpack.datascience-ui.config.js');
+const datascience = require('./webpack.datascience-ui.config.js');
+const extension = require('./webpack.extension.config.js');
 
-module.exports = [merge(common, {
-    devtool: 'eval'
-})];
+module.exports = [
+    merge(datascience, {
+        devtool: '"eval"'
+    }), 
+    extension
+];
