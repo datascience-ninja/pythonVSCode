@@ -3,7 +3,7 @@ const nodeExternals = require('webpack-node-externals');
 const configFileName = 'tsconfig.extension.json';
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const webpack = require('webpack');
-
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 module.exports = {
     mode: 'none',
     // mode: 'production'
@@ -21,16 +21,23 @@ module.exports = {
         rules: [
             {
                 test: /\.ts$/,
-                use: {
-                    loader: "awesome-typescript-loader",
-                    options: {
-                        configFileName,
-                        reportFiles: [
-                            'src/datascience-ui/**/*.{ts,tsx}'
-                        ]
-                    },
-                }
+                exclude: /node_modules/,
+                use: [{
+                    loader: 'ts-loader',
+                }]
             },
+            // {
+            //     test: /\.ts$/,
+            //     use: {
+            //         loader: "awesome-typescript-loader",
+            //         options: {
+            //             configFileName,
+            //             reportFiles: [
+            //                 'src/datascience-ui/**/*.{ts,tsx}'
+            //             ]
+            //         },
+            //     }
+            // },
             // {
             //     test: /\.json$/,
             //     type: 'javascript/auto',
@@ -90,9 +97,14 @@ module.exports = {
     //     // }
     // },
     // externals: [nodeExternals(), 'vscode'],
-    externals: ['vscode'],
+    // externals: 'commonjs vscode',
+    // externals: [nodeExternals(), 'vscode'],
+    externals: {
+        vscode: "commonjs vscode" // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed
+    },
     resolve: {
-        extensions: ['.ts', '.js']
+        extensions: ['.ts', '.js'],
+        plugins: [new TsconfigPathsPlugin({ configFile: configFileName })],
     },
     output: {
         // filename: 'index.js',c
