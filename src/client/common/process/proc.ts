@@ -4,7 +4,7 @@
 // tslint:disable:no-any
 
 import { spawn } from 'child_process';
-import { Observable } from 'rxjs/Observable';
+import * as rxjs from 'rxjs/Observable';
 import { Disposable } from 'vscode';
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
@@ -50,7 +50,7 @@ export class ProcessService implements IProcessService {
         let procExited = false;
 
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
         const output = new rxObservable<Output<string>>(subscriber => {
             const disposables: Disposable[] = [];
 

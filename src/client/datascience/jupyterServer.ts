@@ -10,7 +10,7 @@ import * as JupyterServiceTypes from '@jupyterlab/services';
 import * as fsExtra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Observable } from 'rxjs/Observable';
+import * as rxjs from 'rxjs/Observable';
 import * as uuid4 from 'uuid/v4';
 import * as vscode from 'vscode';
 
@@ -161,7 +161,7 @@ export class JupyterServer implements INotebookServer {
         return deferred.promise;
     }
 
-    public executeObservable = (code: string, file: string, line: number): Observable<ICell[]> => {
+    public executeObservable = (code: string, file: string, line: number): rxjs.Observable<ICell[]> => {
         // If we have a session, execute the code now.
         if (this.session) {
 
@@ -193,7 +193,7 @@ export class JupyterServer implements INotebookServer {
         }
 
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
         // Can't run because no session
         return new rxObservable<ICell[]>(subscriber => {
             subscriber.error(new Error(localize.DataScience.sessionDisposed()));
@@ -396,9 +396,9 @@ export class JupyterServer implements INotebookServer {
         return source;
     }
 
-    private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
+    private combineObservables = (...args: rxjs.Observable<ICell>[]): rxjs.Observable<ICell[]> => {
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
         return new rxObservable<ICell[]>(subscriber => {
             // When all complete, we have our results
             const results: { [id: string]: ICell } = {};
@@ -429,9 +429,9 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private changeDirectoryObservable = (file: string): Observable<boolean> => {
+    private changeDirectoryObservable = (file: string): rxjs.Observable<boolean> => {
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
         return new rxObservable<boolean>(subscriber => {
             // Execute some code and when its done, finish our subscriber
             const dir = path.dirname(file);
@@ -444,9 +444,9 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private chainObservables<T>(first: Observable<T>, second: () => Observable<ICell>): Observable<ICell> {
+    private chainObservables<T>(first: rxjs.Observable<T>, second: () => rxjs.Observable<ICell>): rxjs.Observable<ICell> {
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
         return new rxObservable<ICell>(subscriber => {
             first.subscribe(
                 () => { return; },
@@ -467,7 +467,7 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private executeCodeObservable = (code: string, file: string, line: number): Observable<ICell> => {
+    private executeCodeObservable = (code: string, file: string, line: number): rxjs.Observable<ICell> => {
         // tslint:disable-next-line:no-require-imports
         const fs = require('fs-extra') as typeof fsExtra;
         if (this.session) {
@@ -483,14 +483,14 @@ export class JupyterServer implements INotebookServer {
         }
 
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
         return new rxObservable<ICell>(subscriber => {
             subscriber.error(new Error(localize.DataScience.sessionDisposed()));
             subscriber.complete();
         });
     }
 
-    private executeCodeObservableInternal = (code: string, file: string, line: number): Observable<ICell> => {
+    private executeCodeObservableInternal = (code: string, file: string, line: number): rxjs.Observable<ICell> => {
         // tslint:disable-next-line:no-require-imports
         const uuid = require('uuid/v4') as typeof uuid4;
 
@@ -508,11 +508,11 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private executeMarkdownObservable = (code: string, file: string, line: number): Observable<ICell> => {
+    private executeMarkdownObservable = (code: string, file: string, line: number): rxjs.Observable<ICell> => {
         // tslint:disable-next-line:no-require-imports
         const uuid = require('uuid/v4') as typeof uuid4;
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
 
         return new rxObservable<ICell>(subscriber => {
             // Generate markdown by stripping out the comment and markdown header
@@ -535,12 +535,12 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture | undefined): Observable<ICell> {
+    private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture | undefined): rxjs.Observable<ICell> {
         // tslint:disable-next-line:no-require-imports
         const jupyterServices = require('@jupyterlab/services') as typeof JupyterServiceTypes;
         const kernelMsg = jupyterServices.KernelMessage;
         // tslint:disable-next-line:no-require-imports
-        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const rxObservable = (require('rxjs/Observable') as typeof rxjs).Observable;
         return new rxObservable<ICell>(subscriber => {
             // Start out empty;
             const cell: ICell = {
