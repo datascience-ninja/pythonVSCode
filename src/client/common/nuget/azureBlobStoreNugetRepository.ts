@@ -37,13 +37,13 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
                     if (error) {
                         return reject(error);
                     }
-                    resolve(result.entries.map(item => {
+                    resolve(Promise.all(result.entries.map(async item => {
                         return {
                             package: item.name,
                             uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
-                            version: nugetService.getVersionFromPackageFileName(item.name)
+                            version: await nugetService.getVersionFromPackageFileName(item.name)
                         };
-                    }));
+                    })));
                 });
         });
     }

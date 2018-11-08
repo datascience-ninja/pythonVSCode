@@ -24,7 +24,10 @@ function parseEnvironmentVariables(contents: string): EnvironmentVariables | und
 }
 
 export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean = true): EnvironmentVariables {
-    const buffer = fs.readFileSync(envFile, 'utf8');
+    // tslint:disable-next-line:no-require-imports
+    const fsExtra = require('fs-extra') as typeof fs;
+
+    const buffer = fsExtra.readFileSync(envFile, 'utf8');
     const env = parseEnvironmentVariables(buffer)!;
     return mergeWithProcessEnvVars ? mergeEnvVariables(env, process.env) : mergePythonPath(env, process.env.PYTHONPATH as string);
 }

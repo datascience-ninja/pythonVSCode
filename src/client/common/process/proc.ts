@@ -49,7 +49,9 @@ export class ProcessService implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
 
-        const output = new Observable<Output<string>>(subscriber => {
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        const output = new rxObservable<Output<string>>(subscriber => {
             const disposables: Disposable[] = [];
 
             const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {

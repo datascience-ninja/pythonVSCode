@@ -232,7 +232,7 @@ export interface IApplicationShell {
      *
      * @param url Url to open.
      */
-    openUrl(url: string): void;
+    openUrl(url: string): Promise<void>;
 
     /**
      * Set a message to the status bar. This is a short hand for the more powerful

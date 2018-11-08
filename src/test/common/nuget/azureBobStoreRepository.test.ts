@@ -29,7 +29,7 @@ suite('Nuget Azure Storage Repository', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
 
         const nugetService = typeMoq.Mock.ofType<INugetService>();
-        nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
+        nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => Promise.resolve(new SemVer('1.1.1')));
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
 

@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import { injectable } from 'inversify';
-import * as xml2js from 'xml2js';
 import { IXUnitParser, PassCalculationFormulae, Tests, TestStatus } from './types';
 type TestSuiteResult = {
     $: {
@@ -49,7 +48,8 @@ export class XUnitParser implements IXUnitParser {
         return updateResultsFromXmlLogFile(tests, outputXmlFile, passCalculationFormulae);
     }
 }
-export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void> {
+export async function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void> {
+    const xml2js = await import('xml2js');
     // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
         fs.readFile(outputXmlFile, 'utf8', (err, data) => {

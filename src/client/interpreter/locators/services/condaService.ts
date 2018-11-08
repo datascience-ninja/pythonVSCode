@@ -3,7 +3,7 @@ import {
     named, optional
 } from 'inversify';
 import * as path from 'path';
-import { parse, SemVer } from 'semver';
+import { SemVer } from 'semver';
 import { Logger } from '../../../common/logger';
 import {
     IFileSystem, IPlatformService
@@ -103,6 +103,7 @@ export class CondaService implements ICondaService {
      * Return the conda version.
      */
     public async getCondaVersion(): Promise<SemVer | undefined> {
+        const semver = await import('semver');
         const processService = await this.processServiceFactory.create();
         const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
         let versionString: string | undefined;
@@ -119,13 +120,13 @@ export class CondaService implements ICondaService {
         if (!versionString) {
             return;
         }
-        const version = parse(versionString, true);
+        const version = semver.parse(versionString, true);
         if (version) {
             return version;
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
         Logger.warn(`Unable to parse Version of Conda, ${versionString}`);
-        return new SemVer('0.0.1');
+        return new semver.SemVer('0.0.1');
     }
 
     /**

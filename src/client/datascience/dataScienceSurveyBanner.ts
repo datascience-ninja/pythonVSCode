@@ -108,7 +108,7 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
     }
 
     public async launchSurvey(): Promise<void> {
-        this.browserService.launch(this.surveyLink);
+        return this.browserService.launch(this.surveyLink);
     }
 
     private async getPythonDSCommandCounter(): Promise<number> {

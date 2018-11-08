@@ -9,7 +9,7 @@ export type NugetPackage = { package: string; version: SemVer; uri: string };
 export const INugetService = Symbol('INugetService');
 export interface INugetService {
     isReleaseVersion(version: SemVer): boolean;
-    getVersionFromPackageFileName(packageName: string): SemVer;
+    getVersionFromPackageFileName(packageName: string): Promise<SemVer>;
 }
 
 export const INugetRepository = Symbol('INugetRepository');

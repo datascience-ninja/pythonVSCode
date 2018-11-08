@@ -4,25 +4,27 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as request from 'request';
+import { CoreOptions, Request } from 'request';
 import { IHttpClient } from '../../activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 
 @injectable()
 export class HttpClient implements IHttpClient {
-    public readonly requestOptions: request.CoreOptions;
+    public readonly requestOptions: CoreOptions;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.requestOptions = { proxy: workspaceService.getConfiguration('http').get('proxy', '') };
     }
 
-    public downloadFile(uri: string): request.Request {
-        return request(uri, this.requestOptions);
+    public async downloadFile(uri: string): Promise<Request> {
+        const request = await import('request');
+        return request.default(uri, this.requestOptions);
     }
-    public getJSON<T>(uri: string): Promise<T> {
+    public async getJSON<T>(uri: string): Promise<T> {
+        const request = await import('request');
         return new Promise<T>((resolve, reject) => {
-            request(uri, this.requestOptions, (ex, response, body) => {
+            request.default(uri, this.requestOptions, (ex, response, body) => {
                 if (ex) {
                     return reject(ex);
                 }

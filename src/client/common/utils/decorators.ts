@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import * as lodash from 'lodash';
 import { isTestExecution, isUnitTestExecution } from '../constants';
 
 /**
@@ -13,6 +13,8 @@ export function debounce(wait?: number) {
         const originalMethod = descriptor.value!;
         // If running tests, lets not debounce (so tests run fast).
         wait = wait && isUnitTestExecution() ? undefined : wait;
+        // tslint:disable-next-line:no-require-imports
+        const _ = require('lodash') as typeof lodash;
         // tslint:disable-next-line:no-invalid-this no-any
         (descriptor as any).value = _.debounce(function () { return originalMethod.apply(this, arguments); }, wait);
     };

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode-jsonrpc';
 
@@ -67,6 +66,7 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private createTemplateFile = async () : Promise<string> => {
+        const fs = await import('fs-extra');
         // Create a temp file on disk
         const file = await this.fileSystem.createTemporaryFile('.tpl');
 

@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
@@ -64,7 +63,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const locators = this.getLocators();
         const promises = locators.map(async provider => provider.getInterpreters(resource));
         const listOfInterpreters = await Promise.all(promises);
-
+        const _ = await import('lodash');
         const items = _.flatten(listOfInterpreters)
             .filter(item => !!item)
             .map(item => item!);

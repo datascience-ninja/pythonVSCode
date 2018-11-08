@@ -5,7 +5,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as tmp from 'tmp';
 
 export function fsExistsAsync(filePath: string): Promise<boolean> {
     return new Promise<boolean>(resolve => {
@@ -48,13 +47,13 @@ export function getSubDirectories(rootDir: string): Promise<string[]> {
     });
 }
 
-export function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string; cleanupCallback: Function }> {
+export async function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string; cleanupCallback: Function }> {
     // tslint:disable-next-line:no-any
     const options: any = { postfix: extension };
     if (temporaryDirectory) {
         options.dir = temporaryDirectory;
     }
-
+    const tmp = await import('tmp');
     return new Promise<{ filePath: string; cleanupCallback: Function }>((resolve, reject) => {
         tmp.file(options, (err, tmpFile, fd, cleanupCallback) => {
             if (err) {

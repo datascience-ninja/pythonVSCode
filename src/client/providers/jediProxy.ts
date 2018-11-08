@@ -3,9 +3,7 @@
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 import { ChildProcess } from 'child_process';
-import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as pidusage from 'pidusage';
 import {
     CancellationToken, CancellationTokenSource, CompletionItemKind,
     Disposable, SymbolKind, Uri
@@ -253,6 +251,7 @@ export class JediProxy implements Disposable {
 
         // Do not run pidusage over and over, wait for it to finish.
         const deferred = createDeferred<void>();
+        const pidusage = await import('pidusage');
         pidusage.stat(this.proc.pid, async (err, result) => {
             if (err) {
                 this.pidUsageFailures.counter += 1;
@@ -622,6 +621,7 @@ export class JediProxy implements Disposable {
             if (lines.length === 0) {
                 return '';
             }
+            const fs = await import('fs-extra');
             const exists = await fs.pathExists(lines[0]);
             return exists ? lines[0] : '';
         } catch  {

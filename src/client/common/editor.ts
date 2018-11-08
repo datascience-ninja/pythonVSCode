@@ -1,7 +1,6 @@
 import * as dmp from 'diff-match-patch';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
-import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
@@ -61,8 +60,9 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
     // Remove the text added by unified_diff
     // # Work around missing newline (http://bugs.python.org/issue2142).
     patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
-
-    const d = new dmp.diff_match_patch();
+    // tslint:disable-next-line:no-require-imports
+    const dmpPatch = require('diff-match-patch') as typeof dmp;
+    const d = new dmpPatch.diff_match_patch();
     const patches = patch_fromText.call(d, patch);
     if (!Array.isArray(patches) || patches.length === 0) {
         throw new Error('Unable to parse Patch string');
@@ -106,21 +106,25 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
 
         let fileName = fileNameLines[0].substring(fileNameLines[0].indexOf(' a') + 3).trim();
         fileName = workspaceRoot && !path.isAbsolute(fileName) ? path.resolve(workspaceRoot, fileName) : fileName;
-        if (!fs.existsSync(fileName)) {
+        // tslint:disable-next-line:no-require-imports
+        const fsExtra = require('fs-extra') as typeof fs;
+        if (!fsExtra.existsSync(fileName)) {
             return;
         }
 
         // Remove the text added by unified_diff
         // # Work around missing newline (http://bugs.python.org/issue2142).
         patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
+        // tslint:disable-next-line:no-require-imports
+        const dmpPatch = require('diff-match-patch') as typeof dmp;
 
-        const d = new dmp.diff_match_patch();
+        const d = new dmpPatch.diff_match_patch();
         const patches = patch_fromText.call(d, patch);
         if (!Array.isArray(patches) || patches.length === 0) {
             throw new Error('Unable to parse Patch string');
         }
 
-        const fileSource = fs.readFileSync(fileName).toString('utf8');
+        const fileSource = fsExtra.readFileSync(fileName).toString('utf8');
         const fileUri = Uri.file(fileName);
 
         // Add line feeds and build the text edits
@@ -150,7 +154,9 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
     return workspaceEdit;
 }
 export function getTextEdits(before: string, after: string): TextEdit[] {
-    const d = new dmp.diff_match_patch();
+    // tslint:disable-next-line:no-require-imports
+    const dmpPatch = require('diff-match-patch') as typeof dmp;
+    const d = new dmpPatch.diff_match_patch();
     const diffs = d.diff_main(before, after);
     return getTextEditsInternal(before, diffs).map(edit => edit.apply());
 }
@@ -178,9 +184,11 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
             }
         }
 
+        // tslint:disable-next-line:no-require-imports
+        const dmpPatch = require('diff-match-patch') as typeof dmp;
         // tslint:disable-next-line:switch-default
         switch (diffs[i][0]) {
-            case dmp.DIFF_DELETE:
+            case dmpPatch.DIFF_DELETE:
                 if (edit === null) {
                     edit = new Edit(EditAction.Delete, start);
                 } else if (edit.action !== EditAction.Delete) {
@@ -189,7 +197,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
                 edit.end = new Position(line, character);
                 break;
 
-            case dmp.DIFF_INSERT:
+            case dmpPatch.DIFF_INSERT:
                 if (edit === null) {
                     edit = new Edit(EditAction.Insert, start);
                 } else if (edit.action === EditAction.Delete) {
@@ -203,7 +211,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
                 edit.text += diffs[i][1];
                 break;
 
-            case dmp.DIFF_EQUAL:
+            case dmpPatch.DIFF_EQUAL:
                 if (edit !== null) {
                     edits.push(edit);
                     edit = null;
@@ -219,7 +227,9 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     return edits;
 }
 
-export function getTempFileWithDocumentContents(document: TextDocument): Promise<string> {
+export async function getTempFileWithDocumentContents(document: TextDocument): Promise<string> {
+    const md5 = await import('md5');
+    const fsExtra = await import('fs-extra');
     return new Promise<string>((resolve, reject) => {
         const ext = path.extname(document.uri.fsPath);
         // Don't create file in temp folder since external utilities
@@ -229,8 +239,8 @@ export function getTempFileWithDocumentContents(document: TextDocument): Promise
         // as the original one and then removed.
 
         // tslint:disable-next-line:no-require-imports
-        const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
-        fs.writeFile(fileName, document.getText(), ex => {
+        const fileName = `${document.uri.fsPath}.${md5.default(document.uri.fsPath)}${ext}`;
+        fsExtra.writeFile(fileName, document.getText(), ex => {
             if (ex) {
                 reject(`Failed to create a temporary file, ${ex.message}`);
             }
@@ -260,8 +270,10 @@ function patch_fromText(textline): Patch[] {
         if (!m) {
             throw new Error(`Invalid patch string: ${text[textPointer]}`);
         }
+        // tslint:disable-next-line:no-require-imports
+        const dmpPatch = require('diff-match-patch') as typeof dmp;
         // tslint:disable-next-line:no-any
-        const patch = new (<any>dmp.diff_match_patch).patch_obj();
+        const patch = new (<any>dmpPatch.diff_match_patch).patch_obj();
         patches.push(patch);
         patch.start1 = parseInt(m[1], 10);
         if (m[2] === '') {
@@ -302,13 +314,13 @@ function patch_fromText(textline): Patch[] {
             }
             if (sign === '-') {
                 // Deletion.
-                patch.diffs.push([dmp.DIFF_DELETE, line]);
+                patch.diffs.push([dmpPatch.DIFF_DELETE, line]);
             } else if (sign === '+') {
                 // Insertion.
-                patch.diffs.push([dmp.DIFF_INSERT, line]);
+                patch.diffs.push([dmpPatch.DIFF_INSERT, line]);
             } else if (sign === ' ') {
                 // Minor equality.
-                patch.diffs.push([dmp.DIFF_EQUAL, line]);
+                patch.diffs.push([dmpPatch.DIFF_EQUAL, line]);
             } else if (sign === '@') {
                 // Start of next patch.
                 break;
@@ -339,7 +351,10 @@ export class EditorUtils implements IEditorUtils {
         // # Work around missing newline (http://bugs.python.org/issue2142).
         patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
 
-        const d = new dmp.diff_match_patch();
+        // tslint:disable-next-line:no-require-imports
+        const dmpPatch = require('diff-match-patch') as typeof dmp;
+
+        const d = new dmpPatch.diff_match_patch();
         const patches = patch_fromText.call(d, patch);
         if (!Array.isArray(patches) || patches.length === 0) {
             throw new Error('Unable to parse Patch string');

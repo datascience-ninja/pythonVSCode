@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
 import '../../common/extensions';
 
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 
@@ -61,6 +61,7 @@ export class WebPanel implements IWebPanel {
 
     private async load(mainScriptPath: string, embeddedCss?: string) {
         if (this.panel) {
+            const fs = await import('fs-extra');
             if (await fs.pathExists(mainScriptPath)) {
 
                 // Call our special function that sticks this script inside of an html page

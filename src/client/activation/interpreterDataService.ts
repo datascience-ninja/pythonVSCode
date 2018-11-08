@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ExtensionContext, Uri } from 'vscode';
@@ -68,11 +67,12 @@ export class InterpreterDataService {
     const pythonExecutable = path.join(path.dirname(interpreterPath), platform.isWindows ? 'python.exe' : 'python');
     // Hash mod time and creation time
     const deferred = createDeferred<string>();
-    fs.lstat(pythonExecutable, (err, stats) => {
+    fs.lstat(pythonExecutable, async (err, stats) => {
       if (err) {
         deferred.resolve('');
       } else {
-        const actual = createHash('sha512').update(`${stats.ctime}-${stats.mtime}`).digest('hex');
+        const crypto = await import('crypto');
+        const actual = crypto.createHash('sha512').update(`${stats.ctime}-${stats.mtime}`).digest('hex');
         deferred.resolve(actual);
       }
     });

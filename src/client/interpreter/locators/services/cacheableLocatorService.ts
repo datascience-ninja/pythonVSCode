@@ -4,7 +4,7 @@
 // tslint:disable:no-any
 
 import { injectable, unmanaged } from 'inversify';
-import * as md5 from 'md5';
+import * as md5Types from 'md5';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
@@ -113,6 +113,8 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         }
 
         const workspace = workspaceService.getWorkspaceFolder(resource);
+        // tslint:disable-next-line:no-require-imports
+        const md5 = require('md5') as typeof md5Types;
         return workspace ? `${this.cacheKeyPrefix}:${md5(workspace.uri.fsPath)}` : this.cacheKeyPrefix;
     }
 }

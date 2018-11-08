@@ -9,8 +9,9 @@ import { IRandom } from '../types';
 
 function getRandom(): number {
     let num: number = 0;
-
-    const buf: Buffer = crypto.randomBytes(2);
+    // tslint:disable-next-line:no-require-imports
+    const cryp = require('crypto') as typeof crypto;
+    const buf: Buffer = cryp.randomBytes(2);
     num = (buf.readUInt8(0) << 8) + buf.readUInt8(1);
 
     const maxValue: number = Math.pow(16, 4) - 1;

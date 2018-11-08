@@ -1,6 +1,4 @@
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IRegistry, RegistryHive } from '../../../common/platform/types';
@@ -47,6 +45,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
             this.getCompanies(RegistryHive.HKCU, hkcuArch),
             this.getCompanies(RegistryHive.HKLM, Architecture.x86)
         ];
+        const _ = await import('lodash');
         // https://github.com/Microsoft/PTVS/blob/ebfc4ca8bab234d453f15ee426af3b208f3c143c/Python/Product/Cookiecutter/Shared/Interpreters/PythonRegistrySearch.cs#L44
         if (this.is64Bit) {
             promises.push(this.getCompanies(RegistryHive.HKLM, Architecture.x64));
@@ -84,7 +83,8 @@ export class WindowsRegistryService extends CacheableLocatorService {
         const tagKeys = await this.registry.getKeys(companyKey, hive, arch);
         return Promise.all(tagKeys.map(tagKey => this.getInreterpreterDetailsForCompany(tagKey, companyKey, hive, arch)));
     }
-    private getInreterpreterDetailsForCompany(tagKey: string, companyKey: string, hive: RegistryHive, arch?: Architecture): Promise<PythonInterpreter | undefined | null> {
+    private async getInreterpreterDetailsForCompany(tagKey: string, companyKey: string, hive: RegistryHive, arch?: Architecture): Promise<PythonInterpreter | undefined | null> {
+        const fs = await import('fs-extra');
         const key = `${tagKey}\\InstallPath`;
         type InterpreterInformation = null | undefined | {
             installPath: string;

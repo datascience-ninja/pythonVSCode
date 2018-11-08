@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
@@ -197,7 +196,8 @@ export class LintingEngine implements ILintingEngine {
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
 
         const settings = this.configurationService.getSettings(document.uri);
-        const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => new Minimatch(pattern));
+        const minimatch = await import('minimatch');
+        const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => new minimatch.Minimatch(pattern));
         if (ignoreMinmatches.some(matcher => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
             return false;
         }

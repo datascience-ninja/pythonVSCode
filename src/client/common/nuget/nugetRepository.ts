@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse, SemVer } from 'semver';
+import { SemVer } from 'semver';
 import { IHttpClient } from '../../activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { INugetRepository, NugetPackage } from './types';
@@ -25,7 +25,8 @@ export class NugetRepository implements INugetRepository {
         const uri = `${packageBaseAddress}/${packageName.toLowerCase().trim()}/index.json`;
         const httpClient = this.serviceContainer.get<IHttpClient>(IHttpClient);
         const result = await httpClient.getJSON<{ versions: string[] }>(uri);
-        return result.versions.map(v => parse(v, true) || new SemVer('0.0.0'));
+        const semver = await import('semver');
+        return result.versions.map(v => semver.parse(v, true) || new semver.SemVer('0.0.0'));
     }
     public getNugetPackageUri(packageBaseAddress: string, packageName: string, version: SemVer): string {
         return `${packageBaseAddress}/${packageName}/${version.raw}/${packageName}.${version.raw}.nupkg`;

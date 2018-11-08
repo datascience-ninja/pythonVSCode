@@ -4,12 +4,14 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
-import * as fs from 'fs-extra';
+import { Kernel, KernelMessage, Session, SessionManager } from '@jupyterlab/services';
+// tslint:disable-next-line:no-duplicate-imports
+import * as JupyterServiceTypes from '@jupyterlab/services';
+import * as fsExtra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
-import * as uuid from 'uuid/v4';
+import * as uuid4 from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
@@ -28,21 +30,22 @@ import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer 
 export class JupyterServer implements INotebookServer {
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
-    private sessionManager : SessionManager | undefined;
+    private sessionManager: SessionManager | undefined;
     private sessionStartTime: number | undefined;
     private tempFile: string | undefined;
-    private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
+    private onStatusChangedEvent: vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
 
     constructor(
         @inject(ILogger) private logger: ILogger,
         @inject(INotebookProcess) private process: INotebookProcess,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
     }
 
-    public start = async () : Promise<boolean> => {
+    public start = async (): Promise<boolean> => {
+        const jupyterServices = await import('@jupyterlab/services');
 
         if (await this.jupyterExecution.isNotebookSupported()) {
 
@@ -57,7 +60,7 @@ export class JupyterServer implements INotebookServer {
 
             // First connect to the sesssion manager and find a kernel that matches our
             // python we're using
-            const serverSettings = ServerConnection.makeSettings(
+            const serverSettings = jupyterServices.ServerConnection.makeSettings(
                 {
                     baseUrl: connInfo.baseUrl,
                     token: connInfo.token,
@@ -66,7 +69,7 @@ export class JupyterServer implements INotebookServer {
                     wsUrl: connInfo.baseUrl.replace('http', 'ws'),
                     init: { cache: 'no-store', credentials: 'same-origin' }
                 });
-            this.sessionManager = new SessionManager({ serverSettings: serverSettings });
+            this.sessionManager = new jupyterServices.SessionManager({ serverSettings: serverSettings });
 
             // Ask Jupyter for its list of kernel specs.
             const kernelName = await this.findKernelName(this.sessionManager);
@@ -108,11 +111,11 @@ export class JupyterServer implements INotebookServer {
 
     }
 
-    public shutdown = async () : Promise<void> => {
+    public shutdown = async (): Promise<void> => {
         if (this.session) {
-            await this.sessionManager.shutdownAll();
+            await this.sessionManager!.shutdownAll();
             this.session.dispose();
-            this.sessionManager.dispose();
+            this.sessionManager!.dispose();
             this.session = undefined;
             this.sessionManager = undefined;
         }
@@ -121,7 +124,7 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
-    public waitForIdle = async () : Promise<void> => {
+    public waitForIdle = async (): Promise<void> => {
         if (this.session && this.session.kernel) {
             await this.session.kernel.ready;
 
@@ -131,11 +134,11 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
-    public getCurrentState() : Promise<ICell[]> {
+    public getCurrentState(): Promise<ICell[]> {
         return Promise.resolve([]);
     }
 
-    public execute(code : string, file: string, line: number) : Promise<ICell[]> {
+    public execute(code: string, file: string, line: number): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -158,7 +161,7 @@ export class JupyterServer implements INotebookServer {
         return deferred.promise;
     }
 
-    public executeObservable = (code: string, file: string, line: number) : Observable<ICell[]> => {
+    public executeObservable = (code: string, file: string, line: number): Observable<ICell[]> => {
         // If we have a session, execute the code now.
         if (this.session) {
 
@@ -171,7 +174,7 @@ export class JupyterServer implements INotebookServer {
             if (RegExpValues.PythonMarkdownCellMarker.test(firstLine)) {
                 // We have at least one markdown. We might have to split it if there any lines that don't begin
                 // with #
-                const firstNonMarkdown = split.findIndex((l : string) => l.trim().length > 0 && !l.trim().startsWith('#'));
+                const firstNonMarkdown = split.findIndex((l: string) => l.trim().length > 0 && !l.trim().startsWith('#'));
                 if (firstNonMarkdown >= 0) {
                     // We need to combine results
                     return this.combineObservables(
@@ -189,14 +192,16 @@ export class JupyterServer implements INotebookServer {
             }
         }
 
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
         // Can't run because no session
-        return new Observable<ICell[]>(subscriber => {
+        return new rxObservable<ICell[]>(subscriber => {
             subscriber.error(new Error(localize.DataScience.sessionDisposed()));
             subscriber.complete();
         });
     }
 
-    public executeSilently = (code: string) : Promise<void> => {
+    public executeSilently = (code: string): Promise<void> => {
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate a new request and wrap it in a promise as we wait for it to finish
@@ -216,7 +221,7 @@ export class JupyterServer implements INotebookServer {
         return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
     }
 
-    public get onStatusChanged() : vscode.Event<boolean> {
+    public get onStatusChanged(): vscode.Event<boolean> {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
@@ -228,7 +233,7 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
-    public restartKernel = async () : Promise<void> => {
+    public restartKernel = async (): Promise<void> => {
         if (this.session && this.session.kernel) {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
@@ -245,7 +250,7 @@ export class JupyterServer implements INotebookServer {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
-    public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
+    public translateToNotebook = async (cells: ICell[]): Promise<nbformat.INotebookContent | undefined> => {
 
         if (this.process) {
 
@@ -256,7 +261,7 @@ export class JupyterServer implements INotebookServer {
             const first = pythonVersion.substr(0, 1);
 
             // Use this to build our metadata object
-            const metadata : nbformat.INotebookMetadata = {
+            const metadata: nbformat.INotebookMetadata = {
                 kernelspec: {
                     display_name: `Python ${first}`,
                     language: 'python',
@@ -269,7 +274,7 @@ export class JupyterServer implements INotebookServer {
                         version: parseInt(first, 10)
                     }
                 },
-                orig_nbformat : 2,
+                orig_nbformat: 2,
                 file_extension: '.py',
                 mimetype: 'text/x-python',
                 name: 'python',
@@ -280,7 +285,7 @@ export class JupyterServer implements INotebookServer {
 
             // Combine this into a JSON object
             return {
-                cells: cells.map((cell : ICell) => this.pruneCell(cell)),
+                cells: cells.map((cell: ICell) => this.pruneCell(cell)),
                 nbformat: 4,
                 nbformat_minor: 2,
                 metadata: metadata
@@ -288,7 +293,7 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
-    public launchNotebook = async (file: string) : Promise<boolean> => {
+    public launchNotebook = async (file: string): Promise<boolean> => {
         if (this.process) {
             await this.process.spawn(file);
             return true;
@@ -296,8 +301,8 @@ export class JupyterServer implements INotebookServer {
         return false;
     }
 
-    private generateRequest = (code: string, silent: boolean) : Kernel.IFuture => {
-        return this.session.kernel.requestExecute(
+    private generateRequest = (code: string, silent: boolean): Kernel.IFuture => {
+        return this.session!.kernel.requestExecute(
             {
                 // Replace windows line endings with unix line endings.
                 code: code.replace('\r\n', '\n'),
@@ -309,11 +314,11 @@ export class JupyterServer implements INotebookServer {
         );
     }
 
-    private timeout(ms : number) {
+    private timeout(ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    private findKernelName = async (manager: SessionManager) : Promise<string> => {
+    private findKernelName = async (manager: SessionManager): Promise<string> => {
         // Ask the session manager to refresh its list of kernel specs. We're going to
         // iterate through them finding the best match
         await manager.refreshSpecs();
@@ -329,9 +334,9 @@ export class JupyterServer implements INotebookServer {
         // - Path match = 10 Points. Very likely this is the right one
         // - Language match = 1 point. Might be a match
         // - Version match = 4 points for major version match
-        const keys = Object.keys(manager.specs.kernelspecs);
+        const keys = Object.keys(manager.specs!.kernelspecs);
         for (let i = 0; i < keys.length; i += 1) {
-            const spec = manager.specs.kernelspecs[keys[i]];
+            const spec = manager.specs!.kernelspecs[keys[i]];
             let score = 0;
 
             if (spec.argv.length > 0 && spec.argv[0] === pythonPath) {
@@ -344,7 +349,7 @@ export class JupyterServer implements INotebookServer {
 
                 // See if the version is the same
                 if (pythonVersion) {
-                    const digits = spec.name.match(/\d+/g);
+                    const digits = spec.name.match(/\d+/g)!;
                     if (digits.length > 0 && parseInt(digits[0], 10) === pythonVersion[0]) {
                         // Major version match
                         score += 4;
@@ -361,21 +366,21 @@ export class JupyterServer implements INotebookServer {
 
         // If still not set, at least pick the first one
         if (!bestSpec && keys.length > 0) {
-            bestSpec = manager.specs.kernelspecs[keys[0]].name;
+            bestSpec = manager.specs!.kernelspecs[keys[0]].name;
         }
 
         return bestSpec;
     }
 
-    private pruneCell(cell : ICell) : nbformat.IBaseCell {
+    private pruneCell(cell: ICell): nbformat.IBaseCell {
         // Remove the #%% of the top of the source if there is any. We don't need
         // this to end up in the exported ipynb file.
-        const copy = {...cell.data};
+        const copy = { ...cell.data };
         copy.source = this.pruneSource(cell.data.source);
         return copy;
     }
 
-    private pruneSource(source : nbformat.MultilineString) : nbformat.MultilineString {
+    private pruneSource(source: nbformat.MultilineString): nbformat.MultilineString {
 
         if (Array.isArray(source) && source.length > 0) {
             if (RegExpValues.PythonCellMarker.test(source[0])) {
@@ -391,17 +396,19 @@ export class JupyterServer implements INotebookServer {
         return source;
     }
 
-    private combineObservables = (...args : Observable<ICell>[]) : Observable<ICell[]> => {
-        return new Observable<ICell[]>(subscriber => {
+    private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        return new rxObservable<ICell[]>(subscriber => {
             // When all complete, we have our results
-            const results : { [id : string] : ICell } = {};
+            const results: { [id: string]: ICell } = {};
 
             args.forEach(o => {
                 o.subscribe(c => {
                     results[c.id] = c;
 
                     // Convert to an array
-                    const array = Object.keys(results).map((k : string) => {
+                    const array = Object.keys(results).map((k: string) => {
                         return results[k];
                     });
 
@@ -415,15 +422,17 @@ export class JupyterServer implements INotebookServer {
                         }
                     }
                 },
-                e => {
-                    subscriber.error(e);
-                });
+                    e => {
+                        subscriber.error(e);
+                    });
             });
         });
     }
 
-    private changeDirectoryObservable = (file: string) : Observable<boolean> => {
-        return new Observable<boolean>(subscriber => {
+    private changeDirectoryObservable = (file: string): Observable<boolean> => {
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        return new rxObservable<boolean>(subscriber => {
             // Execute some code and when its done, finish our subscriber
             const dir = path.dirname(file);
             this.executeSilently(`%cd "${dir}"`)
@@ -435,29 +444,32 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private chainObservables<T>(first : Observable<T>, second : () => Observable<ICell>) : Observable<ICell> {
-        return new Observable<ICell>(subscriber => {
+    private chainObservables<T>(first: Observable<T>, second: () => Observable<ICell>): Observable<ICell> {
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        return new rxObservable<ICell>(subscriber => {
             first.subscribe(
                 () => { return; },
                 (err) => subscriber.error(err),
                 () => {
                     // When the first completes, tell the second to go
-                    second().subscribe((cell : ICell) => {
+                    second().subscribe((cell: ICell) => {
                         subscriber.next(cell);
                     },
-                    (err) => {
-                        subscriber.error(err);
-                    },
-                    () => {
-                        subscriber.complete();
-                    });
+                        (err) => {
+                            subscriber.error(err);
+                        },
+                        () => {
+                            subscriber.complete();
+                        });
                 }
             );
         });
     }
 
-    private executeCodeObservable = (code: string, file: string, line: number) : Observable<ICell> => {
-
+    private executeCodeObservable = (code: string, file: string, line: number): Observable<ICell> => {
+        // tslint:disable-next-line:no-require-imports
+        const fs = require('fs-extra') as typeof fsExtra;
         if (this.session) {
             // Send a magic that changes the current directory if we aren't already sending a magic
             if (line >= 0 && fs.existsSync(file)) {
@@ -470,13 +482,18 @@ export class JupyterServer implements INotebookServer {
             }
         }
 
-        return new Observable<ICell>(subscriber => {
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        return new rxObservable<ICell>(subscriber => {
             subscriber.error(new Error(localize.DataScience.sessionDisposed()));
             subscriber.complete();
         });
     }
 
-    private executeCodeObservableInternal = (code: string, file: string, line: number) : Observable<ICell> => {
+    private executeCodeObservableInternal = (code: string, file: string, line: number): Observable<ICell> => {
+        // tslint:disable-next-line:no-require-imports
+        const uuid = require('uuid/v4') as typeof uuid4;
+
         // Send an execute request with this code
         const id = uuid();
         const request = this.session ? this.generateRequest(code, false) : undefined;
@@ -484,16 +501,20 @@ export class JupyterServer implements INotebookServer {
         return this.generateExecuteObservable(code, file, line, id, request);
     }
 
-    private appendLineFeed(arr : string[], modifier? : (s : string) => string) {
+    private appendLineFeed(arr: string[], modifier?: (s: string) => string) {
         return arr.map((s: string, i: number) => {
             const out = modifier ? modifier(s) : s;
             return i === arr.length - 1 ? `${out}` : `${out}\n`;
         });
     }
 
-    private executeMarkdownObservable = (code: string, file: string, line: number) : Observable<ICell> => {
+    private executeMarkdownObservable = (code: string, file: string, line: number): Observable<ICell> => {
+        // tslint:disable-next-line:no-require-imports
+        const uuid = require('uuid/v4') as typeof uuid4;
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
 
-        return new Observable<ICell>(subscriber => {
+        return new rxObservable<ICell>(subscriber => {
             // Generate markdown by stripping out the comment and markdown header
             const markdown = this.appendLineFeed(code.split('\n').slice(1), s => s.trim().slice(1).trim());
 
@@ -502,8 +523,8 @@ export class JupyterServer implements INotebookServer {
                 file: file,
                 line: line,
                 state: CellState.finished,
-                data : {
-                    cell_type : 'markdown',
+                data: {
+                    cell_type: 'markdown',
                     source: markdown,
                     metadata: {}
                 }
@@ -514,8 +535,13 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture | undefined) : Observable<ICell> {
-        return new Observable<ICell>(subscriber => {
+    private generateExecuteObservable(code: string, file: string, line: number, id: string, request: Kernel.IFuture | undefined): Observable<ICell> {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterServices = require('@jupyterlab/services') as typeof JupyterServiceTypes;
+        const kernelMsg = jupyterServices.KernelMessage;
+        // tslint:disable-next-line:no-require-imports
+        const rxObservable = require('rxjs/Observable') as typeof Observable;
+        return new rxObservable<ICell>(subscriber => {
             // Start out empty;
             const cell: ICell = {
                 data: {
@@ -544,17 +570,17 @@ export class JupyterServer implements INotebookServer {
             if (request) {
                 request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                     try {
-                        if (KernelMessage.isExecuteResultMsg(msg)) {
+                        if (kernelMsg.isExecuteResultMsg(msg)) {
                             this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                        } else if (KernelMessage.isExecuteInputMsg(msg)) {
+                        } else if (kernelMsg.isExecuteInputMsg(msg)) {
                             this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                        } else if (KernelMessage.isStatusMsg(msg)) {
+                        } else if (kernelMsg.isStatusMsg(msg)) {
                             this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                        } else if (KernelMessage.isStreamMsg(msg)) {
+                        } else if (kernelMsg.isStreamMsg(msg)) {
                             this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                        } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                        } else if (kernelMsg.isDisplayDataMsg(msg)) {
                             this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                        } else if (KernelMessage.isErrorMsg(msg)) {
+                        } else if (kernelMsg.isErrorMsg(msg)) {
                             this.handleError(msg as KernelMessage.IErrorMsg, cell);
                         } else {
                             this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
@@ -569,7 +595,7 @@ export class JupyterServer implements INotebookServer {
                         subscriber.next(cell);
                     } catch (err) {
                         // If not a restart error, then tell the subscriber
-                        if (startTime > this.sessionStartTime) {
+                        if (startTime > this.sessionStartTime!) {
                             this.logger.logError(`Error during message ${msg.header.msg_type}`);
                             subscriber.error(err);
                         }
@@ -577,10 +603,10 @@ export class JupyterServer implements INotebookServer {
                 };
 
                 // Create completion and error functions so we can bind our cell object
-                const completion = (error : boolean) => {
+                const completion = (error: boolean) => {
                     cell.state = error ? CellState.error : CellState.finished;
                     // Only do this if start time is still valid
-                    if (startTime > this.sessionStartTime) {
+                    if (startTime > this.sessionStartTime!) {
                         subscriber.next(cell);
                     }
                     subscriber.complete();
@@ -595,14 +621,14 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
-    private addToCellData = (cell: ICell, output : nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError) => {
-        const data : nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+    private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError) => {
+        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         data.outputs = [...data.outputs, output];
         cell.data = data;
     }
 
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, cell: ICell) {
-        this.addToCellData(cell, { output_type : 'execute_result', data: msg.content.data, metadata : msg.content.metadata, execution_count : msg.content.execution_count });
+        this.addToCellData(cell, { output_type: 'execute_result', data: msg.content.data, metadata: msg.content.metadata, execution_count: msg.content.execution_count });
     }
 
     private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, cell: ICell) {
@@ -618,34 +644,34 @@ export class JupyterServer implements INotebookServer {
     }
 
     private handleStreamMesssage(msg: KernelMessage.IStreamMsg, cell: ICell) {
-        const output : nbformat.IStream = {
-            output_type : 'stream',
-            name : msg.content.name,
-            text : msg.content.text
+        const output: nbformat.IStream = {
+            output_type: 'stream',
+            name: msg.content.name,
+            text: msg.content.text
         };
         this.addToCellData(cell, output);
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, cell: ICell) {
-        const output : nbformat.IDisplayData = {
-            output_type : 'display_data',
+        const output: nbformat.IDisplayData = {
+            output_type: 'display_data',
             data: msg.content.data,
-            metadata : msg.content.metadata
+            metadata: msg.content.metadata
         };
         this.addToCellData(cell, output);
     }
 
     private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
-        const output : nbformat.IError = {
-            output_type : 'error',
-            ename : msg.content.ename,
-            evalue : msg.content.evalue,
-            traceback : msg.content.traceback
+        const output: nbformat.IError = {
+            output_type: 'error',
+            ename: msg.content.ename,
+            evalue: msg.content.evalue,
+            traceback: msg.content.traceback
         };
         this.addToCellData(cell, output);
     }
 
-    private async generateTempFile() : Promise<string> {
+    private async generateTempFile(): Promise<string> {
         // Create a temp file on disk
         const file = await this.fileSystem.createTemporaryFile('.ipynb');
 

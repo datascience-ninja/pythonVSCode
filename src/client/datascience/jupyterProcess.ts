@@ -3,7 +3,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as tk from 'tree-kill';
 import { URL } from 'url';
 
 import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, Output, PythonVersionInfo } from '../common/process/types';
@@ -52,10 +51,11 @@ export class JupyterProcess implements INotebookProcess {
         });
     }
 
-    public shutdown = async () : Promise<void> => {
+    public shutdown = async (): Promise<void> => {
+        const tk = await import('tree-kill');
         if (this.startObservable && this.startObservable.proc) {
             if (!this.startObservable.proc.killed) {
-                tk(this.startObservable.proc.pid);
+                tk.default(this.startObservable.proc.pid);
             }
             this.startObservable = undefined;
         }

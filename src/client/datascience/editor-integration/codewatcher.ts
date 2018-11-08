@@ -5,6 +5,7 @@ import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor
 
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import '../../common/extensions';
 import { ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -169,7 +170,7 @@ export class CodeWatcher implements ICodeWatcher {
             this.applicationShell.showErrorMessage(jupyterError.message, jupyterError.actionTitle).then(v => {
                 // User clicked on the link, open it.
                 if (v === jupyterError.actionTitle) {
-                    this.applicationShell.openUrl(jupyterError.action);
+                    this.applicationShell.openUrl(jupyterError.action).ignoreErrors();
                 }
             });
         } else if (err.message) {

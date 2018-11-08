@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { JSONArray, JSONObject, JSONValue } from '@phosphor/coreutils';
-import * as fm from 'file-matcher';
-import * as fs from 'fs-extra';
+import { FindOptions} from 'file-matcher';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
@@ -237,7 +236,8 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         return [...colors1, ...colors2];
     }
 
-    private readTokenColors = async (themeFile: string) : Promise<JSONArray> => {
+    private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
+        const fs = await import('fs-extra');
         const tokenContent = await fs.readFile(themeFile, 'utf8');
         const theme = JSON.parse(tokenContent) as JSONObject;
         const tokenColors = theme['tokenColors'] as JSONArray;
@@ -258,6 +258,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     private findTokenColors = async (theme : string) : Promise<JSONArray> => {
+        const fs = await import('fs-extra');
         const currentExe = this.currentProcess.execPath;
         let currentPath = path.dirname(currentExe);
 
@@ -271,7 +272,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Search through all of the json files for the theme name
         const escapedThemeName = theme.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const searchOptions : fm.FindOptions = {
+        const searchOptions : FindOptions = {
             path: extensionsPath,
             recursiveSearch: true,
             fileFilter : {
@@ -279,7 +280,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 content: new RegExp(`id[',"]:\\s*[',"]${escapedThemeName}[',"]`)
             }
         };
-
+        const fm = await import('file-matcher');
         const matcher = new fm.FileMatcher();
 
         try {

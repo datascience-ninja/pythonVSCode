@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IPlatformService } from '../../../common/platform/types';
@@ -43,7 +42,8 @@ export class KnownPathsService extends CacheableLocatorService {
     /**
      * Return the located interpreters.
      */
-    private suggestionsFromKnownPaths() {
+    private async suggestionsFromKnownPaths() {
+        const _ = await import('lodash');
         const promises = this.knownSearchPaths.getSearchPaths().map(dir => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)
             // tslint:disable-next-line:underscore-consistent-invocation

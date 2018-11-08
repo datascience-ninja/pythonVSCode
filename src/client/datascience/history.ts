@@ -3,7 +3,6 @@
 'use strict';
 import '../common/extensions';
 
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
@@ -27,11 +26,11 @@ import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INote
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
-    private disposed : boolean = false;
-    private webPanel : IWebPanel | undefined;
+    private disposed: boolean = false;
+    private webPanel: IWebPanel | undefined;
     private loadPromise: Promise<void>;
-    private settingsChangedDisposable : Disposable;
-    private closedEvent : EventEmitter<IHistory>;
+    private settingsChangedDisposable: Disposable;
+    private closedEvent: EventEmitter<IHistory>;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
@@ -43,8 +42,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(INotebookServer) private jupyterServer: INotebookServer,
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator,
-        @inject(IStatusProvider) private statusProvider : IStatusProvider,
+        @inject(ICodeCssGenerator) private cssGenerator: ICodeCssGenerator,
+        @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution) {
 
         // Sign up for configuration changes
@@ -58,7 +57,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         this.loadPromise = this.load();
     }
 
-    public async show() : Promise<void> {
+    public async show(): Promise<void> {
         if (!this.disposed) {
             // Make sure we're loaded first
             await this.loadPromise;
@@ -70,11 +69,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public get closed() : Event<IHistory> {
+    public get closed(): Event<IHistory> {
         return this.closedEvent.event;
     }
 
-    public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+    public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<void> {
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
@@ -116,7 +115,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     // tslint:disable-next-line: no-any no-empty
     public postMessage(type: string, payload?: any) {
         if (this.webPanel) {
-            this.webPanel.postMessage({type: type, payload: payload});
+            this.webPanel.postMessage({ type: type, payload: payload });
         }
     }
 
@@ -175,19 +174,19 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private setStatus = (message: string) : Disposable => {
+    private setStatus = (message: string): Disposable => {
         const result = this.statusProvider.set(message, this);
         this.potentiallyUnfinishedStatus.push(result);
         return result;
     }
 
-    private logTelemetry = (event : string) => {
+    private logTelemetry = (event: string) => {
         sendTelemetryEvent(event);
     }
 
-    private onAddCodeEvent = (cells : ICell[], editor?: TextEditor) => {
+    private onAddCodeEvent = (cells: ICell[], editor?: TextEditor) => {
         // Send each cell to the other side
-        cells.forEach((cell : ICell) => {
+        cells.forEach((cell: ICell) => {
             if (this.webPanel) {
                 switch (cell.state) {
                     case CellState.init:
@@ -248,10 +247,11 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     private async gotoCodeInternal(file: string, line: number) {
-        let editor : TextEditor | undefined;
+        let editor: TextEditor | undefined;
+        const fs = await import('fs-extra');
 
         if (await fs.pathExists(file)) {
-            editor = await this.documentManager.showTextDocument(Uri.file(file), {viewColumn: ViewColumn.One});
+            editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
         } else {
             // File URI isn't going to work. Look through the active text documents
             editor = this.documentManager.visibleTextEditors.find(te => te.document.fileName === file);
@@ -282,7 +282,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                     // First we need to finish all outstanding cells.
                     this.unfinishedCells.forEach(c => {
                         c.state = CellState.error;
-                        this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
+                        this.webPanel!.postMessage({ type: HistoryMessages.FinishCell, payload: c });
                     });
                     this.unfinishedCells = [];
                     this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
@@ -303,7 +303,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     @captureTelemetry(Telemetry.ExportNotebook, {}, false)
     // tslint:disable-next-line: no-any no-empty
-    private export (payload: any) {
+    private export(payload: any) {
         if (payload.contents) {
             // Should be an array of cells
             const cells = payload.contents as ICell[];
@@ -327,15 +327,16 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private exportToFile = async (cells: ICell[], file : string) => {
+    private exportToFile = async (cells: ICell[], file: string) => {
         // Take the list of cells, convert them to a notebook json format and write to disk
         if (this.jupyterServer) {
             const notebook = await this.jupyterServer.translateToNotebook(cells);
 
             try {
+                const fs = await import('fs-extra');
                 // tslint:disable-next-line: no-any
-                await fs.writeFile(file, JSON.stringify(notebook), {encoding: 'utf8', flag: 'w'});
-                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str : string | undefined) => {
+                await fs.writeFile(file, JSON.stringify(notebook), { encoding: 'utf8', flag: 'w' });
+                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), localize.DataScience.exportOpenQuestion()).then((str: string | undefined) => {
                     if (str && file && this.jupyterServer) {
                         // If the user wants to, open the notebook they just generated.
                         this.jupyterServer.launchNotebook(file).ignoreErrors();
@@ -348,7 +349,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private loadJupyterServer = async () : Promise<void> => {
+    private loadJupyterServer = async (): Promise<void> => {
         // Startup our jupyter server
         const status = this.setStatus(localize.DataScience.startingJupyter());
         try {
@@ -362,7 +363,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    private loadWebPanel = async () : Promise<void> => {
+    private loadWebPanel = async (): Promise<void> => {
         // Create our web panel (it's the UI that shows up for the history)
 
         // Figure out the name of our main bundle. Should be in our output directory
@@ -376,7 +377,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css);
     }
 
-    private load = async () : Promise<void> => {
+    private load = async (): Promise<void> => {
 
         // Check to see if we support jupyter or not. If not quick fail
         if (!(await this.jupyterExecution.isImportSupported())) {

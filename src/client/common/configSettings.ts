@@ -24,9 +24,6 @@ import {
 } from './types';
 import { SystemVariables } from './variables/systemVariables';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const untildify = require('untildify');
-
 export const IS_WINDOWS = /^win/.test(process.platform);
 
 // tslint:disable-next-line:completed-docs
@@ -364,6 +361,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
 }
 
 function getAbsolutePath(pathToCheck: string, rootDir: string): string {
+    // tslint:disable-next-line:no-require-imports no-var-requires
+    const untildify = require('untildify');
+
     // tslint:disable-next-line:prefer-type-cast no-unsafe-any
     pathToCheck = untildify(pathToCheck) as string;
     if (isTestExecution() && !pathToCheck) { return rootDir; }
@@ -374,6 +374,9 @@ function getAbsolutePath(pathToCheck: string, rootDir: string): string {
 }
 
 function getPythonExecutable(pythonPath: string): string {
+    // tslint:disable-next-line:no-require-imports no-var-requires
+    const untildify = require('untildify');
+
     // tslint:disable-next-line:prefer-type-cast no-unsafe-any
     pythonPath = untildify(pythonPath) as string;
 

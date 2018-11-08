@@ -3,7 +3,7 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { getUnicodeCategory, UnicodeCategory } from './unicode';
+import * as unicodeTypes from './unicode';
 
 export function isIdentifierStartChar(ch: number) {
     switch (ch) {
@@ -22,7 +22,10 @@ export function isIdentifierStartChar(ch: number) {
             break;
     }
 
-    const cat = getUnicodeCategory(ch);
+    // tslint:disable-next-line:no-require-imports
+    const unicode = require('unicode') as typeof unicodeTypes;
+    const cat = unicode.getUnicodeCategory(ch);
+    const UnicodeCategory = unicode.UnicodeCategory;
     switch (cat) {
         // Supported categories for starting an identifier
         case UnicodeCategory.UppercaseLetter:
@@ -62,7 +65,10 @@ export function isIdentifierChar(ch: number) {
             break;
     }
 
-    switch (getUnicodeCategory(ch)) {
+    // tslint:disable-next-line:no-require-imports
+    const unicode = require('unicode') as typeof unicodeTypes;
+    const UnicodeCategory = unicode.UnicodeCategory;
+    switch (unicode.getUnicodeCategory(ch)) {
         // Supported categories for continuing an identifier
         case UnicodeCategory.NonSpacingMark:
         case UnicodeCategory.SpacingCombiningMark:

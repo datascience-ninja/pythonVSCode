@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as semver from 'semver';
+import { SemVer } from 'semver';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceVerbose } from '../../common/logger';
 import { NugetPackage } from '../../common/nuget/types';
@@ -59,6 +59,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         if (!configService.getSettings().downloadLanguageServer) {
+            const semver = await import('semver');
             return { path: languageServerFolder, version: new semver.SemVer('0.0.0') };
         }
         const dirs = await this.getExistingLanguageServerDirectories();
@@ -71,13 +72,14 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
     public async getExistingLanguageServerDirectories(): Promise<FolderVersionPair[]> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const subDirs = await fs.getSubDirectories(EXTENSION_ROOT_DIR);
-        return subDirs
+        return Promise.all(subDirs
             .filter(dir => path.basename(dir).startsWith(languageServerFolder))
-            .map(dir => { return { path: dir, version: this.getFolderVersion(path.basename(dir)) }; });
+            .map(async dir => { return { path: dir, version: await this.getFolderVersion(path.basename(dir)) }; }));
     }
 
-    public getFolderVersion(dirName: string): semver.SemVer {
+    public async getFolderVersion(dirName: string): Promise<SemVer> {
         const suffix = dirName.substring(languageServerFolder.length + 1);
+        const semver = await import('semver');
         return suffix.length === 0 ? new semver.SemVer('0.0.0') : (semver.parse(suffix, true) || new semver.SemVer('0.0.0'));
     }
     private getDownloadChannel() {

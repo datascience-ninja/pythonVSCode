@@ -102,7 +102,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     private async action(): Promise<void> {
         const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
         const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
-        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+        return browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
     }
 
     // user selection

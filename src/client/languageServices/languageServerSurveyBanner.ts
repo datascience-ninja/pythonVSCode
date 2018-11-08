@@ -125,7 +125,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         const launchCounter = await this.getPythonLSLaunchCounter();
         let lsVersion: string = await this.getPythonLSVersion();
         lsVersion = encodeURIComponent(lsVersion);
-        this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}&v=${lsVersion}`);
+        return this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}&v=${lsVersion}`);
     }
 
     private async incrementPythonLanguageServiceLaunchCounter(): Promise<number> {

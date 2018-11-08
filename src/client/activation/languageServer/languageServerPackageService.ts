@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse, SemVer } from 'semver';
+import { parse } from 'semver';
 import { IApplicationEnvironment } from '../../common/application/types';
 import { PVSC_EXTENSION_ID } from '../../common/constants';
 import { traceVerbose } from '../../common/logger';
@@ -68,7 +68,7 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         const isAlphaVersion = this.isAlphaVersionOfExtension();
         return isAlphaVersion ? 'beta' : 'stable';
     }
-    protected getValidPackage(packages: NugetPackage[]): NugetPackage {
+    protected async getValidPackage(packages: NugetPackage[]): Promise<NugetPackage> {
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         const validPackages = packages
             .filter(item => item.version.major === this.maxMajorVersion)
@@ -83,8 +83,9 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
 
         // This is a fall back, if the wrong version is returned, e.g. version is cached downstream in some proxy server or similar.
         // This way, we always ensure we have the minimum version that's compatible.
+        const semver = await import('semver');
         return {
-            version: new SemVer(minimumVersion),
+            version: new semver.SemVer(minimumVersion),
             package: LanguageServerPackageStorageContainers.stable,
             uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
         };

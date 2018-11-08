@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires no-any unified-signatures
-const opn = require('opn');
+// tslint:disable:no-any unified-signatures
 
 import { injectable } from 'inversify';
 import { CancellationToken, Disposable, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
@@ -50,7 +49,8 @@ export class ApplicationShell implements IApplicationShell {
     public showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined> {
         return window.showInputBox(options, token);
     }
-    public openUrl(url: string): void {
+    public async openUrl(url: string): Promise<void> {
+        const opn = await import('opn');
         opn(url);
     }
 

@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import * as Registry from 'winreg';
+import { Options } from 'winreg';
 import { Architecture } from '../utils/platform';
 import { IRegistry, RegistryHive } from './types';
 
@@ -11,10 +11,10 @@ enum RegistryArchitectures {
 @injectable()
 export class RegistryImplementation implements IRegistry {
     public async getKeys(key: string, hive: RegistryHive, arch?: Architecture) {
-        return getRegistryKeys({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key });
+        return getRegistryKeys({ hive: await translateHive(hive)!, arch: translateArchitecture(arch), key });
     }
     public async getValue(key: string, hive: RegistryHive, arch?: Architecture, name: string = '') {
-        return getRegistryValue({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key }, name);
+        return getRegistryValue({ hive: await translateHive(hive)!, arch: translateArchitecture(arch), key }, name);
     }
 }
 
@@ -29,9 +29,10 @@ export function getArchitectureDisplayName(arch?: Architecture) {
     }
 }
 
-async function getRegistryValue(options: Registry.Options, name: string = '') {
+async function getRegistryValue(options: Options, name: string = '') {
+    const winReg = await import('winreg');
     return new Promise<string | undefined | null>((resolve, reject) => {
-        new Registry(options).get(name, (error, result) => {
+        new winReg.default(options).get(name, (error, result) => {
             if (error || !result || typeof result.value !== 'string') {
                 return resolve(undefined);
             }
@@ -39,10 +40,11 @@ async function getRegistryValue(options: Registry.Options, name: string = '') {
         });
     });
 }
-async function getRegistryKeys(options: Registry.Options): Promise<string[]> {
+async function getRegistryKeys(options: Options): Promise<string[]> {
+    const winReg = await import('winreg');
     // https://github.com/python/peps/blob/master/pep-0514.txt#L85
     return new Promise<string[]>((resolve, reject) => {
-        new Registry(options).keys((error, result) => {
+        new winReg.default(options).keys((error, result) => {
             if (error || !Array.isArray(result)) {
                 return resolve([]);
             }
@@ -60,12 +62,13 @@ function translateArchitecture(arch?: Architecture): RegistryArchitectures | und
             return;
     }
 }
-function translateHive(hive: RegistryHive): string | undefined {
+async function translateHive(hive: RegistryHive): Promise<string | undefined> {
+    const winReg = await import('winreg');
     switch (hive) {
         case RegistryHive.HKCU:
-            return Registry.HKCU;
+            return winReg.HKCU;
         case RegistryHive.HKLM:
-            return Registry.HKLM;
+            return winReg.HKLM;
         default:
             return;
     }

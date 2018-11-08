@@ -1,5 +1,4 @@
 import { injectable, unmanaged } from 'inversify';
-import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
@@ -29,11 +28,13 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         return this.suggestionsFromKnownVenvs(resource);
     }
     private async suggestionsFromKnownVenvs(resource?: Uri) {
+        const _ = await import('lodash');
         const searchPaths = await this.searchPathsProvider.getSearchPaths(resource);
         return Promise.all(searchPaths.map(dir => this.lookForInterpretersInVenvs(dir, resource)))
             .then(listOfInterpreters => _.flatten(listOfInterpreters));
     }
     private async lookForInterpretersInVenvs(pathToCheck: string, resource?: Uri) {
+        const _ = await import('lodash');
         return this.fileSystem.getSubDirectories(pathToCheck)
             .then(subDirs => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
             .then(dirs => dirs.filter(dir => dir.length > 0))

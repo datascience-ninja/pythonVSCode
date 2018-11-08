@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const sudo = require('sudo-prompt');
-
 import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
@@ -39,7 +36,7 @@ export abstract class ModuleInstaller {
                 if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
                     await terminalService.sendCommand(pythonPath, args);
                 } else {
-                    this.elevatedInstall(pythonPath, args);
+                    await this.elevatedInstall(pythonPath, args);
                 }
             } else {
                 await terminalService.sendCommand(pythonPath, args.concat(['--user']));
@@ -81,7 +78,7 @@ export abstract class ModuleInstaller {
         });
     }
 
-    private elevatedInstall(execPath: string, args: string[]) {
+    private async elevatedInstall(execPath: string, args: string[]) {
         const options = {
             name: 'VS Code Python'
         };
@@ -90,7 +87,7 @@ export abstract class ModuleInstaller {
 
         outputChannel.appendLine('');
         outputChannel.appendLine(`[Elevated] ${command}`);
-
+        const sudo = await import('sudo-prompt');
         sudo.exec(command, options, (error, stdout, stderr) => {
             if (error) {
                 vscode.window.showErrorMessage(error);

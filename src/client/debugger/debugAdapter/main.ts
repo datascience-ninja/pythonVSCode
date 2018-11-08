@@ -103,9 +103,9 @@ export class PythonDebugger extends DebugSession {
             });
 
     }
-    protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
+    protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<void> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !fs.fileExistsSync(args.program)) {
+        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !(await fs.fileExists(args.program))) {
             return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
         }
 

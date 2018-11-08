@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import '../../common/extensions';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
@@ -84,7 +85,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             const osName = platform.isWindows
                 ? 'Windows'
                 : (platform.isMac ? 'MacOS' : 'Linux');
-            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${(interpreter.type === InterpreterType.Conda) ? 'Conda' : ''}`);
+            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${(interpreter.type === InterpreterType.Conda) ? 'Conda' : ''}`).ignoreErrors();
         }
     }
 }

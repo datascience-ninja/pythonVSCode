@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
@@ -53,6 +52,7 @@ export class CurrentPathService extends CacheableLocatorService {
         const python3 = this.getInterpreter('python3', '').then(interpreter => [interpreter]);
         const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
         const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
+        const _ = await import('lodash');
         return Promise.all<string[]>([currentPythonInterpreter, python3, python2, python])
             // tslint:disable-next-line:underscore-consistent-invocation
             .then(listOfInterpreters => _.flatten(listOfInterpreters))

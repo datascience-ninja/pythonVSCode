@@ -5,7 +5,7 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { parse, SemVer } from 'semver';
+import { SemVer } from 'semver';
 import { INugetService } from './types';
 
 @injectable()
@@ -14,7 +14,7 @@ export class NugetService implements INugetService {
         return version.prerelease.length === 0;
     }
 
-    public getVersionFromPackageFileName(packageName: string): SemVer {
+    public async getVersionFromPackageFileName(packageName: string): Promise<SemVer> {
         const ext = path.extname(packageName);
         const versionWithExt = packageName.substring(packageName.indexOf('.') + 1);
         const version = versionWithExt.substring(0, versionWithExt.length - ext.length);
@@ -24,6 +24,7 @@ export class NugetService implements INugetService {
         const lastParts = parts.filter((_, index) => index === 3).join('.');
         const suffix = lastParts.length === 0 ? '' : `-${lastParts}`;
         const fixedVersion = `${semverParts}${suffix}`;
-        return parse(fixedVersion, true) || new SemVer('0.0.0');
+        const semver = await import('semver');
+        return semver.parse(fixedVersion, true) || new semver.SemVer('0.0.0');
     }
 }

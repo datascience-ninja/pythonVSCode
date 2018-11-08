@@ -1,4 +1,3 @@
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
@@ -102,8 +101,9 @@ export abstract class BaseFormatter {
             : document.fileName;
     }
 
-    private deleteTempFile(originalFile: string, tempFile: string): Promise<void> {
+    private async deleteTempFile(originalFile: string, tempFile: string): Promise<void> {
         if (originalFile !== tempFile) {
+            const fs = await import('fs-extra');
             return fs.unlink(tempFile);
         }
         return Promise.resolve();

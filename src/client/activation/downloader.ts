@@ -4,7 +4,6 @@
 'use strict';
 
 import * as path from 'path';
-import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
@@ -20,8 +19,6 @@ import {
 import { PlatformData } from './platformData';
 import { IHttpClient, ILanguageServerDownloader, ILanguageServerFolderService } from './types';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const StreamZip = require('node-stream-zip');
 const downloadFileExtension = '.nupkg';
 
 export class LanguageServerDownloader implements ILanguageServerDownloader {
@@ -98,9 +95,11 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
 
         await window.withProgress({
             location: ProgressLocation.Window
-        }, (progress) => {
+        }, async (progress) => {
             const httpClient = this.serviceContainer.get<IHttpClient>(IHttpClient);
-            requestProgress(httpClient.downloadFile(uri))
+            const requestProgress = await import('request-progress');
+            const req = await httpClient.downloadFile(uri);
+            requestProgress(req)
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
@@ -133,8 +132,9 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         const title = 'Extracting files... ';
         await window.withProgress({
             location: ProgressLocation.Window
-        }, (progress) => {
-            const zip = new StreamZip({
+        }, async (progress) => {
+            const streamZip = await import('node-stream-zip');
+            const zip = new streamZip.StreamZip({
                 file: tempFilePath,
                 storeEntries: true
             });

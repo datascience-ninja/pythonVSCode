@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as getos from 'getos';
 import * as os from 'os';
 import * as semver from 'semver';
 import { IPlatformInfo } from '../platform/types';
@@ -57,14 +56,19 @@ export function getOSType(platform: string = process.platform): OSType {
 }
 
 export class Info implements IPlatformInfo {
+    public readonly version: semver.SemVer;
     constructor(
         public readonly type: OSType,
         private readonly arch: string = os.arch(),
         // See:
         //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/semver/index.d.ts#L152
-        public readonly version: semver.SemVer = new semver.SemVer('0.0.0'),
+        version?: semver.SemVer,
         public readonly distro: OSDistro = OSDistro.Unknown
-    ) { }
+    ) {
+        // tslint:disable-next-line:no-require-imports
+        const sem = require('semver') as typeof semver;
+        this.version = version ? version : new sem.SemVer('0.0.0');
+    }
 
     public get architecture(): Architecture {
         return this.arch === 'x64' ? Architecture.x64 : Architecture.x86;
@@ -107,7 +111,11 @@ function getLinuxInfo(arch: string, getDistro: () => [OSDistro, semver.SemVer]):
 
 function getLinuxDistro(): [OSDistro, semver.SemVer] {
     let distro: OSDistro = OSDistro.Unknown;
-    let version: semver.SemVer = new semver.SemVer('0.0.0');
+    // tslint:disable-next-line:no-require-imports
+    const sem = require('semver') as typeof semver;
+    let version: semver.SemVer = new sem.SemVer('0.0.0');
+    // tslint:disable-next-line:no-require-imports
+    const getos = require('getos');
     getos((exc, info) => {
         if (exc) {
             throw exc;

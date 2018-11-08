@@ -313,7 +313,7 @@ export interface IExtensions {
 
 export const IBrowserService = Symbol('IBrowserService');
 export interface IBrowserService {
-    launch(url: string): void;
+    launch(url: string): Promise<void>;
 }
 
 export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');

@@ -4,10 +4,6 @@ import { fsExistsAsync } from '../common/utils/fs';
 import { Tag } from './contracts';
 
 // tslint:disable:no-require-imports no-var-requires no-suspicious-comment
-// TODO: Turn these into imports.
-const LineByLineReader = require('line-by-line');
-const NamedRegexp = require('named-js-regexp');
-const fuzzy = require('fuzzy');
 
 const IsFileRegEx = /\tkind:file\tline:\d+$/g;
 const LINE_REGEX = '(?<name>\\w+)\\t(?<file>.*)\\t\\/\\^(?<code>.*)\\$\\/;"\\tkind:(?<type>\\w+)\\tline:(?<line>\\d+)$';
@@ -21,6 +17,7 @@ export interface IRegexGroup {
 }
 
 export function matchNamedRegEx(data, regex): IRegexGroup | null {
+    const NamedRegexp = require('named-js-regexp');
     const compiledRegexp = NamedRegexp(regex, 'g');
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {
@@ -109,6 +106,7 @@ export function parseTags(
     token: vscode.CancellationToken,
     maxItems: number = 200
 ): Promise<Tag[]> {
+    const LineByLineReader = require('line-by-line');
     return fsExistsAsync(tagFile).then(exists => {
         if (!exists) {
             return Promise.resolve([]);
@@ -152,6 +150,7 @@ function parseTagsLine(workspaceFolder: string, line: string, searchPattern: str
     if (!match) {
         return;
     }
+    const fuzzy = require('fuzzy');
     if (!fuzzy.test(searchPattern, match.name)) {
         return;
     }
