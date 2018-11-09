@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Options } from 'winreg';
+import * as winregTypes from 'winreg';
 import { Architecture } from '../utils/platform';
 import { IRegistry, RegistryHive } from './types';
 
@@ -29,10 +29,11 @@ export function getArchitectureDisplayName(arch?: Architecture) {
     }
 }
 
-async function getRegistryValue(options: Options, name: string = '') {
-    const winReg = await import('winreg');
+async function getRegistryValue(options: winregTypes.Options, name: string = '') {
+    // tslint:disable-next-line:no-any
+    const winReg = (await import('winreg')) as any as typeof winregTypes;
     return new Promise<string | undefined | null>((resolve, reject) => {
-        new winReg.default(options).get(name, (error, result) => {
+        new winReg(options).get(name, (error, result) => {
             if (error || !result || typeof result.value !== 'string') {
                 return resolve(undefined);
             }
@@ -40,11 +41,12 @@ async function getRegistryValue(options: Options, name: string = '') {
         });
     });
 }
-async function getRegistryKeys(options: Options): Promise<string[]> {
-    const winReg = await import('winreg');
+async function getRegistryKeys(options: winregTypes.Options): Promise<string[]> {
+    // tslint:disable-next-line:no-any
+    const winReg = (await import('winreg')) as any as typeof winregTypes;
     // https://github.com/python/peps/blob/master/pep-0514.txt#L85
     return new Promise<string[]>((resolve, reject) => {
-        new winReg.default(options).keys((error, result) => {
+        new winReg(options).keys((error, result) => {
             if (error || !Array.isArray(result)) {
                 return resolve([]);
             }
