@@ -1,11 +1,11 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
-const configFileName = 'tsconfig.extension.json';
+// const configFileName = 'tsconfig.extension.json';
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const webpack = require('webpack');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
-const extensionTools = require('./build/webpack/extension');
+// const extensionTools = require('./build/webpack/extension');
 
 // const nodeModuleBundleEntries = extensionTools.getNodeModuleBunleEntries();
 // const exteranlSourceLoaderOptions = extensionTools.getExternalSourceLoaderOptions();
