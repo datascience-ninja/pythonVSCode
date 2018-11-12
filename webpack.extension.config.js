@@ -1,6 +1,6 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
-// const configFileName = 'tsconfig.extension.json';
+const configFileName = 'tsconfig.extension.json';
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const webpack = require('webpack');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
@@ -139,11 +139,11 @@ module.exports = {
     // externals: [nodeExternals(), 'vscode'],
     // externals: ["commonjs", "vscode"],
     externals: ["vscode",
-        // "lodash",
-        // "azure-storage",
-        // "vscode-extension-telemetry",
+        "lodash",
+        "azure-storage",
+        "vscode-extension-telemetry",
         "@jupyterlab/services",
-        // "unicode",
+        "unicode",
         "unicode/category/Lu", "unicode/category/Ll", "unicode/category/Lt",
         "unicode/category/Lo", "unicode/category/Lo", "unicode/category/Lm",
         "unicode/category/Nl", "unicode/category/Mn", "unicode/category/Mc",
